@@ -1,0 +1,60 @@
+<!-- clean.html -->
+{% extends 'base.html' %}
+
+{% block title %}Clean Data - Ingenious Dashboard{% endblock %}
+
+{% block content %}
+<div>
+    <h1>Clean Data for {{ dataset.name }}</h1>
+    <form method="POST" action="{{ url_for('clean', dataset_id=dataset.id) }}">
+        <div class="form-group">
+            <label for="remove_duplicates">Remove Duplicates</label>
+            <input type="checkbox" name="remove_duplicates" id="remove_duplicates">
+        </div>
+        <div class="form-group">
+            <label for="fill_na_method_text">Fill Missing Values (Text Columns)</label>
+            <select name="fill_na_method_text" id="fill_na_method_text" class="form-control">
+                <option value="">Select a method</option>
+                <option value="empty_string">Fill with Empty String</option>
+                <option value="mode">Fill with Mode</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="fill_na_method_numeric">Fill Missing Values (Numerical Columns)</label>
+            <select name="fill_na_method_numeric" id="fill_na_method_numeric" class="form-control" onchange="toggleConstantInput()">
+                <option value="">Select a method</option>
+                <option value="mean">Fill with Mean</option>
+                <option value="median">Fill with Median</option>
+                <option value="mode">Fill with Mode</option>
+                <option value="constant">Fill with Constant</option>
+            </select>
+        </div>
+
+        <!-- New form field for constant value -->
+        <div class="form-group" id="constant-value-input" style="display: none;">
+            <label for="fill_na_constant">Constant Value for Filling Missing Numeric Values:</label>
+            <input type="number" id="fill_na_constant" name="fill_na_constant" step="any" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="normalize">Normalize Numerical Columns</label>
+            <input type="checkbox" name="normalize" id="normalize">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Clean Data</button>
+    </form>
+</div>
+
+<script>
+    function toggleConstantInput() {
+        var method = document.getElementById('fill_na_method_numeric').value;
+        var constantInput = document.getElementById('constant-value-input');
+        if (method === 'constant') {
+            constantInput.style.display = 'block';
+        } else {
+            constantInput.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

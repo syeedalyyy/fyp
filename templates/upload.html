@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Upload - Ingenious Dashboard{% endblock %}
+{% block content %}
+<h1 class="text-center my-4">Upload Datasets</h1>
+<form method="post" action="/upload" enctype="multipart/form-data" id="upload-form" class="mx-auto" style="max-width: 500px;">
+    <div class="form-group">
+        <label for="filetype">Select File Type</label>
+        <select class="form-control" id="filetype" name="filetype" required>
+            <option value="csv">CSV</option>
+            <option value="excel">Excel</option>
+            <option value="mysql">MySQL Database</option>
+            <option value="mongodb">MongoDB Database</option>
+        </select>
+    </div>
+    
+    <!-- MySQL fields -->
+    <div id="mysql-fields" style="display: none;">
+        <div class="form-group">
+            <label for="host">MySQL Host</label>
+            <input type="text" class="form-control" id="host" name="host">
+        </div>
+        <div class="form-group">
+            <label for="username">MySQL Username</label>
+            <input type="text" class="form-control" id="username" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">MySQL Password</label>
+            <input type="password" class="form-control" id="password" name="password">
+        </div>
+        <div class="form-group">
+            <label for="database">MySQL Database Name</label>
+            <input type="text" class="form-control" id="database" name="database">
+        </div>
+        <div class="form-group">
+            <label for="table">MySQL Table Name</label>
+            <input type="text" class="form-control" id="table" name="table">
+        </div>
+    </div>
+    
+    <!-- MongoDB fields -->
+    <div id="mongodb-fields" style="display: none;">
+        <div class="form-group">
+            <label for="mongo-host">MongoDB Host</label>
+            <input type="text" class="form-control" id="mongo-host" name="mongo-host">
+        </div>
+        <div class="form-group">
+            <label for="mongo-port">MongoDB Port</label>
+            <input type="number" class="form-control" id="mongo-port" name="mongo-port">
+        </div>
+        <div class="form-group">
+            <label for="mongo-database">MongoDB Database Name</label>
+            <input type="text" class="form-control" id="mongo-database" name="mongo-database">
+        </div>
+        <div class="form-group">
+            <label for="collection">MongoDB Collection Name</label>
+            <input type="text" class="form-control" id="collection" name="collection">
+        </div>
+    </div>
+    
+    <!-- File upload field -->
+    <div class="form-group" id="file-upload">
+        <label for="file">Upload File</label>
+        <input type="file" class="form-control-file" id="file" name="file">
+    </div>
+    
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-primary btn-block">Upload</button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const fileTypeSelect = document.getElementById("filetype");
+    const mysqlFields = document.getElementById("mysql-fields");
+    const mongodbFields = document.getElementById("mongodb-fields");
+    const fileUpload = document.getElementById("file-upload");
+
+    fileTypeSelect.addEventListener("change", function() {
+        if (fileTypeSelect.value === "mysql") {
+            mysqlFields.style.display = "block";
+            mongodbFields.style.display = "none";
+            fileUpload.style.display = "none";
+        } else if (fileTypeSelect.value === "mongodb") {
+            mysqlFields.style.display = "none";
+            mongodbFields.style.display = "block";
+            fileUpload.style.display = "none";
+        } else {
+            mysqlFields.style.display = "none";
+            mongodbFields.style.display = "none";
+            fileUpload.style.display = "block";
+        }
+    });
+});
+</script>
+{% endblock %}

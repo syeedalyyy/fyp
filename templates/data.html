@@ -1,0 +1,28 @@
+
+<!-- data.html -->
+{% extends 'base.html' %}
+{% block title %}Data - Ingenious Dashboard{% endblock %}
+{% block content %}
+<h1>Uploaded Datasets</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dataset in datasets %}
+        <tr>
+            <td>{{ dataset.name }}</td>
+            <td>
+                <a href="/clean/{{ dataset.id }}" class="btn btn-primary">Clean Data</a>
+                <form action="/delete/{{ dataset.id }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

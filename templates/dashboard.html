@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Ingenious Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<style>
+    body {
+        background-color: whitesmoke !important;
+        font-family: Arial, sans-serif !important;
+    }
+    .graphId {
+        background-color: white !important;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-3" style="border-right: 1px solid #d9d9d9;">
+        <form method="post" action="/generate-graph" id="generate-graph-form">
+            <div class="form-group">
+                <label for="graph_type">Select Graph Type</label>
+                <select class="form-control" id="graph_type" name="graph_type">
+                    <option value=""> Select Graph Type </option>
+                    <option value="line">Line Chart</option>
+                    <option value="scatter">Scatter Plot</option>
+                    <option value="bar">Bar Chart</option>
+                    <option value="histogram">Histogram</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="heatmap">Heatmap</option>
+                    <option value="bubble">Bubble Chart</option>
+                    <option value="area">Area Chart</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="dataset1">Select First Dataset</label>
+                <select class="form-control" id="dataset1" name="dataset1">
+                    <option value=""> Select First Dataset </option>
+                    {% for dataset in datasets %}
+                        <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="column1">Select Column for X-Axis</label>
+                <select class="form-control" id="column1" name="column1">
+                    <option value=""> Select Col </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="dataset2">Select Second Dataset</label>
+                <select class="form-control" id="dataset2" name="dataset2">
+                    <option value=""> Select Second Dataset </option>
+                    {% for dataset in datasets %}
+                        <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="column2">Select Column for Y-Axis</label>
+                <select class="form-control" id="column2" name="column2">
+                    <option value=""> Select Col </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="graph_title">Graph Title</label>
+                <input type="text" class="form-control" id="graph_title" name="graph_title" placeholder="Enter graph title">
+            </div>
+
+            <div class="form-group">
+                <label for="x_label">X-axis Label</label>
+                <input type="text" class="form-control" id="x_label" name="x_label" placeholder="Enter X-axis label">
+            </div>
+
+            <div class="form-group">
+                <label for="y_label">Y-axis Label</label>
+                <input type="text" class="form-control" id="y_label" name="y_label" placeholder="Enter Y-axis label">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Generate Graph</button>
+        </form>
+        <button id="generate-report" class="btn btn-primary btn-block mt-3" style="display:none;">Generate Report</button>
+        <button id="clear-dashboard" class="btn btn-danger btn-block mt-3">Clear Dashboard</button>
+    </div>
+
+    <div class="col-md-9">
+        <div class="graph-container" id="graph-container"></div>
+    </div>
+</div>
+
+<script>
+    function toggleReportButton() {
+        const graphContainer = document.getElementById('graph-container');
+        const generateReportButton = document.getElementById('generate-report');
+        generateReportButton.style.display = graphContainer.children.length > 0 ? 'block' : 'none';
+    }
+
+    document.getElementById('generate-graph-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const graphId = `graph${Date.now()}`;
+        const graphDiv = document.createElement('div');
+        graphDiv.id = graphId;
+        graphDiv.style.marginBottom = '20px';
+        const graphContainer = document.getElementById('graph-container');
+        graphContainer.appendChild(graphDiv);
+        const formData = new FormData(this);
+        fetch('/generate-graph', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            Plotly.newPlot(graphId, data.graph_data, data.layout);
+            toggleReportButton();
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('dataset1').addEventListener('change', function() {
+        const datasetId = this.value;
+        fetch(`/get-columns/${datasetId}`)
+            .then(response => response.json())
+            .then(columns => {
+                const column1Select = document.getElementById('column1');
+                column1Select.innerHTML = '<option value=""> Select Col </option>';
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.textContent = column;
+                    column1Select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('dataset2').addEventListener('change', function() {
+        const datasetId = this.value;
+        fetch(`/get-columns/${datasetId}`)
+            .then(response => response.json())
+            .then(columns => {
+                const column2Select = document.getElementById('column2');
+                column2Select.innerHTML = '<option value=""> Select Col </option>';
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.textContent = column;
+                    column2Select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('generate-report').addEventListener('click', function() {
+        const graphContainer = document.getElementById('graph-container');
+        const graphsHtml = [];
+        graphContainer.querySelectorAll('div[id^="graph"]').forEach(graphDiv => {
+            graphsHtml.push(graphDiv.outerHTML);
+        });
+
+        fetch('/generate-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ graphsHtml })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            } else {
+                throw new Error('Failed to generate report');
+            }
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'report.html';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    window.onload = function() {
+        fetch('/get-saved-graphs')
+            .then(response => response.json())
+            .then(savedGraphs => {
+                savedGraphs.forEach(graph => {
+                    const graphId = `graph${graph.id}`;
+                    const graphDiv = document.createElement('div');
+                    graphDiv.id = graphId;
+                    graphDiv.style.marginBottom = '20px';
+                    document.getElementById('graph-container').appendChild(graphDiv);
+                    Plotly.newPlot(graphId, graph.graph_data, graph.layout);
+                });
+                toggleReportButton();
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    document.getElementById('clear-dashboard').addEventListener('click', function() {
+        fetch('/clear-dashboard', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById('graph-container').innerHTML = '';
+                toggleReportButton();
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    toggleReportButton(); // Initial call to set the button state on load
+</script>
+{% endblock %}
